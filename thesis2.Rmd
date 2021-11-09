@@ -1,0 +1,356 @@
+---
+title: "JEDTHESIS"
+output: html_document
+---
+```{r loading}
+pkg <- c("GPArotation", "mvtnorm", "polycor", "psych", "readxl", "scales", "xtable", "ggplot2", "dplyr", "knitr", "kableExtra", "formattable", "MASS", "magrittr", "lmtest", "descr", "lavaan", "devtools", "semPlot", "semTools", "nonnest2", "psycho", "corrplot")
+has   <- pkg %in% rownames(installed.packages())
+if(any(!has)) install.packages(pkg[!has])
+
+df <- read_excel("/Users/jed/Downloads/school/DATA 793 - THESIS/ESS2-9.xlsx", sheet="ESS2-9")
+df <- data.frame(df)
+df2 <- read_excel("/Users/jed/Downloads/school/DATA 793 - THESIS/ESS2-9.xlsx", sheet="2004")
+df2 <- data.frame(df)
+df6 <- read_excel("/Users/jed/Downloads/school/DATA 793 - THESIS/ESS2-9.xlsx", sheet="2012")
+df6 <- data.frame(df)
+df8 <- read_excel("/Users/jed/Downloads/school/DATA 793 - THESIS/ESS2-9.xlsx", sheet="2016")
+df8 <- data.frame(df)
+df9 <- read_excel("/Users/jed/Downloads/school/DATA 793 - THESIS/ESS2-9.xlsx", sheet="2018")
+df9 <- data.frame(df)
+#touristnumbers
+#2004 - 360,400
+#2012 - 672,900
+#2016 - 1,792,200
+#2018 - 2,315,925
+```
+
+```{r}
+df$imsmetn <- ifelse(df$imsmetn  == "7" | df$imsmetn  == "8" | df$imsmetn  == "9", NA, df$imsmetn)
+df$imdfetn <- ifelse(df$imdfetn  == "7" | df$imdfetn  == "8" | df$imdfetn  == "9", NA, df$imdfetn)
+df$impcntr <- ifelse(df$impcntr  == "7" | df$impcntr  == "8" | df$impcntr  == "9", NA, df$impcntr)
+
+#immigration recodes
+df <- df %>%
+  mutate(imsmetn = 5 - imsmetn,
+         impcntr = 5 - impcntr,
+         imdfetn = 5 - imdfetn)
+
+df$imsmetn <- ifelse(df$imsmetn == "1", 1, df$imsmetn)
+df$imsmetn <- ifelse(df$imsmetn == "3" | df$imsmetn == "2", 2, df$imsmetn)
+df$imsmetn <- ifelse(df$imsmetn == "4", 3, df$imsmetn)
+
+df$imdfetn <- ifelse(df$imdfetn == "1", 1, df$imdfetn)
+df$imdfetn <- ifelse(df$imdfetn  == "3" | df$imdfetn == "2", 2, df$imdfetn)
+df$imdfetn <- ifelse(df$imdfetn == "4", 3, df$imdfetn)
+
+df$impcntr <- ifelse(df$impcntr == "1", 3, df$impcntr)
+df$impcntr <- ifelse(df$impcntr == "3" |df$impcntr == "2", 2, df$impcntr)
+df$impcntr <- ifelse(df$impcntr == "4", 3, df$impcntr)
+
+
+df$imbgeco <- ifelse(df$imbgeco  == "77" | df$imbgeco  == "88" | df$imbgeco  == "99", NA, df$imbgeco)
+df$imbgeco <- ifelse(df$imbgeco == "7" | df$imbgeco == "8" | df$imbgeco == "9" | df$imbgeco == "10", 3, df$imbgeco)
+df$imbgeco <- ifelse(df$imbgeco == "4" | df$imbgeco == "5" | df$imbgeco == "6", 2, df$imbgeco)
+df$imbgeco <- ifelse(df$imbgeco == "0" | df$imbgeco == "1" | df$imbgeco == "2" | df$imbgeco == "3", 1, df$imbgeco)
+
+df$imueclt <- ifelse(df$imueclt  == "77" | df$imueclt  == "88" | df$imueclt  == "99", NA, df$imueclt)
+df$imueclt <- ifelse(df$imueclt == "7" | df$imueclt == "8" | df$imueclt == "9" | df$imueclt == "10", 3, df$imueclt)
+df$imueclt <- ifelse(df$imueclt == "4" | df$imueclt == "5" | df$imueclt == "6", 2, df$imueclt)
+df$imueclt <- ifelse(df$imueclt == "0" | df$imueclt == "1" | df$imueclt == "2" | df$imueclt == "3", 1, df$imueclt)
+
+df$imwbcnt <- ifelse(df$imwbcnt  == "77" | df$imwbcnt  == "88" | df$imwbcnt  == "99", NA, df$imwbcnt)
+df$imwbcnt <- ifelse(df$imwbcnt == "7" | df$imwbcnt == "8" | df$imwbcnt == "9" | df$imwbcnt == "10", 3, df$imwbcnt)
+df$imwbcnt <- ifelse(df$imwbcnt == "4" | df$imwbcnt == "5" | df$imwbcnt == "6", 2, df$imwbcnt)
+df$imwbcnt <- ifelse(df$imwbcnt == "0" | df$imwbcnt == "1" | df$imwbcnt == "2" | df$imwbcnt == "3", 1, df$imwbcnt)
+```
+
+```{r}
+#demographics recodes```
+df$agea <- ifelse(df$agea  == "999", NA, df$agea)
+
+df$gndr <- ifelse(df$gndr  == "9", NA, df$gndr)
+df$gndr <- ifelse(df$gndr  == "1", "Male", "Female")
+
+df$edulvla <- ifelse(df$edulvla == "0" | df$edulvla == "77" | df$edulvla == "88" | df$edulvla == "99", NA, df$edulvla)
+df$edulvla <- factor(df$edulvla,  levels=1:6)
+
+df$ctzcntr <- ifelse(df$ctzcntr  == "7" | df$ctzcntr  == "8" | df$ctzcntr  == "9" , NA, df$ctzcntr)
+df$ctzcntr <- factor(df$ctzcntr, labels=c('Citizen', 'Non-citizen'))
+```
+
+```{r}
+df$stflife <- ifelse(df$stflife == "77" | df$stflife == "88" | df$stflife == "99", NA, df$stflife)
+df$stflife <- ifelse(df$stflife == "7" | df$stflife == "8" | df$stflife == "9" | df$stflife == "10", 3, df$stflife)
+df$stflife <- ifelse(df$stflife == "4" | df$stflife == "5" | df$stflife == "6", 2, df$stflife)
+df$stflife <- ifelse(df$stflife == "0" | df$stflife == "1" | df$stflife == "2" | df$stflife == "3", 1, df$stflife)
+
+#stfeco: how satisfied with present state of economy
+df$stfeco <- ifelse(df$stfeco == "77" | df$stfeco == "88" | df$stfeco == "99", NA, df$stfeco)
+df$stfeco <- ifelse(df$stfeco == "7" | df$stfeco == "8" | df$stfeco == "9" | df$stfeco == "10", 3, df$stfeco)
+df$stfeco <- ifelse(df$stfeco == "4" | df$stfeco == "5" | df$stfeco == "6", 2, df$stfeco)
+df$stfeco <- ifelse(df$stfeco == "0" | df$stfeco == "1" | df$stfeco == "2" | df$stfeco == "3", 1, df$stfeco)
+
+#stfgov: how satisfied with national government
+df$stfgov <- ifelse(df$stfgov == "77" | df$stfgov == "88" | df$stfgov == "99", NA, df$stfgov)
+df$stfgov <- ifelse(df$stfgov == "7" | df$stfgov == "8" | df$stfgov == "9" | df$stfgov == "10", 3, df$stfgov)
+df$stfgov <- ifelse(df$stfgov == "4" | df$stfgov == "5" | df$stfgov == "6", 2, df$stfgov)
+df$stfgov <- ifelse(df$stfgov == "0" | df$stfgov == "1" | df$stfgov == "2" | df$stfgov == "3", 1, df$stfgov)
+
+#stfdem: how satisfied with the way democracy works in  country
+df$stfdem <- ifelse(df$stfdem == "77" | df$stfdem == "88" | df$stfdem == "99", NA, df$stfdem)
+df$stfdem <- ifelse(df$stfdem == "7" | df$stfdem == "8" | df$stfdem == "9" | df$stfdem == "10", 3, df$stfdem)
+df$stfdem <- ifelse(df$stfdem == "4" | df$stfdem == "5" | df$stfdem == "6", 2, df$stfdem)
+df$stfdem <- ifelse(df$stfdem == "0" | df$stfdem == "1" | df$stfdem == "2" | df$stfdem == "3", 1, df$stfdem)
+
+
+#happy: how happy are you
+df$happy <- ifelse(df$happy == "77" | df$happy == "88" | df$happy == "99", NA, df$happy)
+df$happy <- ifelse(df$happy == "0" | df$happy == "1" | df$happy == "2" | df$happy == "3" | df$happy == "4", 1, df$happy)
+df$happy <- ifelse(df$happy == "5", 2, df$happy)
+df$happy <- ifelse(df$happy == "6" | df$happy == "7" | df$happy == "8" | df$happy == "9" | df$happy == "10", 3, df$happy)
+
+df$health <- ifelse(df$imsmetn  == "7" | df$health  == "8" | df$health  == "9", NA, df$health)
+df$ipeqopt <- ifelse(df$ipeqopt  == "7" | df$ipeqopt  == "8" | df$ipeqopt  == "9", NA, df$ipeqopt)
+df$ipudrst <- ifelse(df$ipudrst  == "7" | df$ipudrst  == "8" | df$ipudrst  == "9", NA, df$ipudrst)
+df$ipbhprp <- ifelse(df$ipbhprp  == "7" | df$ipbhprp  == "8" | df$ipbhprp  == "9", NA, df$ipbhprp)
+df$impenv <- ifelse(df$impenv  == "7" | df$impenv  == "8" | df$impenv  == "9", NA, df$impenv)
+df$imptrad <- ifelse(df$imptrad  == "7" | df$imptrad  == "8" | df$imptrad  == "9", NA, df$imptrad)
+
+df <- df %>%
+  mutate(health = 6 - health,
+         ipeqopt = 7 - ipeqopt,
+         ipudrst = 7 - ipudrst,
+         ipbhprp = 7 - ipbhprp,
+         impenv = 7 - impenv, 
+         imptrad = 7 - imptrad)
+
+#health: subjective general health
+df$health <- ifelse(df$health == "5"| df$health == "4", 1, df$health)
+df$health <- ifelse(df$health == "3", 2, df$health)
+df$health <- ifelse(df$health == "4" | df$health == "5", 3, df$health)
+
+#ipeqopt: important that people are treated equally and have equal opportunities
+df$ipeqopt <- ifelse(df$ipeqopt == "5" | df$ipeqopt == "6", 3, df$ipeqopt)
+df$ipeqopt <- ifelse(df$ipeqopt == "3" | df$ipeqopt == "4", 2, df$ipeqopt)
+df$ipeqopt <- ifelse(df$ipeqopt == "1" | df$ipeqopt == "2", 1, df$ipeqopt)
+
+#ipudrst: important to understand different people
+df$ipudrst <- ifelse(df$ipudrst == "5" | df$ipudrst == "6", 3, df$ipudrst)
+df$ipudrst <- ifelse(df$ipudrst == "3" | df$ipudrst == "4" , 2, df$ipudrst)
+df$ipudrst <- ifelse(df$ipudrst == "1" | df$ipudrst == "2", 1, df$ipudrst)
+
+#ipbhprp: important to behave properly
+df$ipbhprp <- ifelse(df$ipbhprp == "5" | df$ipbhprp == "6", 3, df$ipbhprp)
+df$ipbhprp <- ifelse(df$ipbhprp == "3" | df$ipbhprp == "4" , 2, df$ipbhprp)
+df$ipbhprp <- ifelse(df$ipbhprp == "1" | df$ipbhprp == "2", 1, df$ipbhprp)
+
+#impenv: important to care for nature and environment
+df$impenv <- ifelse(df$impenv == "5" | df$impenv == "6", 3, df$impenv)
+df$impenv <- ifelse(df$impenv == "3" | df$impenv == "4" , 2, df$impenv)
+df$impenv <- ifelse(df$impenv == "1" | df$impenv == "2", 1, df$impenv)
+
+#imptrad: important to follow traditions and customs
+df$imptrad <- ifelse(df$imptrad == "5" | df$imptrad == "6", 3, df$imptrad)
+df$imptrad <- ifelse(df$imptrad == "3" | df$imptrad == "4", 2, df$imptrad)
+df$imptrad <- ifelse(df$imptrad == "1" | df$imptrad == "2", 1, df$imptrad)
+```
+
+
+```{r}
+df[is.na(df)] <- 0
+
+df04  <- df %>%
+  filter(essround==2)
+df12  <- df %>%
+  filter(essround==6)
+df16  <- df %>%
+  filter(essround==8)
+df18  <- df %>%
+  filter(essround==9)
+```
+
+```{r factor analysis by year }
+#2004
+summary(df04)
+
+corr04 <- cor(df04[19:24])
+n.obs <- nrow(df04)
+round(corr04)
+corr04 <- as.matrix(corr04)
+cor.plot(corr04)
+
+df04.1 <- df04
+#df04.1[is.na(df04.1)] <- 0
+df04.1t <- df04.1[-c(1:18, 25:80)]
+
+corr04mod <- fa(corr04, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+fa.diagram(corr04mod)
+corr04mod$loadings
+
+scores04 <- factor.scores(df04.1t, corr04mod, method="Thurstone")
+scoresdf04 <- scores04$scores
+df04.1 <- cbind(df04.1, scoresdf04)
+```
+
+```{r FA 2012}
+#2004
+summary(df04)
+
+corr04 <- cor(df04[19:24])
+n.obs <- nrow(df04)
+round(corr04)
+corr04 <- as.matrix(corr04)
+cor.plot(corr04)
+
+df04.1 <- df04
+#df04.1[is.na(df04.1)] <- 0
+df04.1t <- df04.1[-c(1:18, 25:80)]
+
+corr04mod <- fa(corr04, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+fa.diagram(corr04mod)
+corr04mod$loadings
+
+scores04 <- factor.scores(df04.1t, corr04mod, method="Thurstone")
+scoresdf04 <- scores04$scores
+df04.1 <- cbind(df04.1, scoresdf04)
+```
+
+```{r FA 2012}
+#2012
+
+corr12 <- cor(df12[19:24])
+n.obs <- nrow(df12)
+round(corr12)
+corr12 <- as.matrix(corr12)
+cor.plot(corr12)
+
+df12.1 <- df12
+#df12.1[is.na(df12.1)] <- 0
+df12.1t <- df12.1[-c(1:18, 25:80)]
+
+corr12mod <- fa(corr12, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+fa.diagram(corr12mod)
+corr12mod$loadings
+
+scores12 <- factor.scores(df12.1t, corr12mod, method="Thurstone")
+scoresdf12 <- scores12$scores
+df12.1 <- cbind(df12.1, scoresdf12)
+```
+```{r FA 2016}
+#2016
+
+corr16 <- cor(df16[19:24])
+n.obs <- nrow(df16)
+round(corr16)
+corr16 <- as.matrix(corr16)
+cor.plot(corr16)
+
+df16.1 <- df16
+#df16.1[is.na(df12.1)] <- 0
+df16.1t <- df16.1[-c(1:18, 25:80)]
+
+corr16mod <- fa(corr16, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+fa.diagram(corr16mod)
+corr16mod$loadings
+
+scores16 <- factor.scores(df16.1t, corr16mod, method="Thurstone")
+scoresdf16 <- scores16$scores
+df16.1 <- cbind(df16.1, scoresdf16)
+```
+
+```{r FA 2018}
+#2018
+corr18 <- cor(df18[19:24])
+n.obs <- nrow(df18)
+round(corr18)
+corr18 <- as.matrix(corr18)
+cor.plot(corr18)
+
+df18.1 <- df18
+#df16.1[is.na(df12.1)] <- 0
+df18.1t <- df18.1[-c(1:18, 25:80)]
+
+corr18mod <- fa(corr18, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+fa.diagram(corr18mod)
+corr18mod$loadings
+
+scores18 <- factor.scores(df18.1t, corr18mod, method="Thurstone")
+scoresdf18 <- scores18$scores
+df18.1 <- cbind(df18.1, scoresdf18)
+```
+
+```{r factor analysis}
+corr1 <- cor(df[19:24])
+n.obs <- nrow(df)
+round(corr1)
+corr1 <- as.matrix(corr1)
+cor.plot(corr1)
+#corr1mod <- fa(corr1, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+#fa.diagram(corr1mod)
+
+df2 <- df
+df2[is.na(df)] <- 0
+df2t <- df2[-c(1:18, 25:80)]
+
+corr1 <- cor(df2t)
+corr1mod <- fa(corr1, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+fa.diagram(corr1mod)
+
+corr1mod$loadings
+#corr1mod$communalities
+#corr1mod$uniquenesses
+#corr1mod$complexity
+
+scores1 <- factor.scores(df2t, corr1mod, method="Thurstone")
+scoresdf <- scores1$scores
+df2 <- cbind(df2, scoresdf)
+head(scores1$scores, 10)
+
+#df2 <- df
+#df2[is.na(df)] <- 0
+
+#df2$imdfetn <- -1 * df2t$imdfetn
+
+#df2t <- df2[-c(1:18, 25:80)]
+
+#corr2 <- cor(df2t)
+#corr2mod <- fa(corr2, nfactors=2, n.obs=n.obs, fm='minres', rotate='varimax')
+#fa.diagram(corr2mod)
+#corr2mod$loadings
+
+#corr2mod$communalities
+#corr2mod$uniquenesses
+#corr2mod$complexity
+#summary(corr2mod)
+#scores1 <- factor.scores(df2t, corr2mod, method="Thurstone")
+#head(scores1$scores, 10)
+#scoresdf <- scores1$scores
+#df2 <- cbind(df2, scoresdf)
+#head(df2)
+
+alpha <- alpha(corr1)
+alpha
+```
+
+```{r}
+
+df2$essround <- ifelse(df2$essround == "2", 360400, df2$essround)
+df2$essround <- ifelse(df2$essround == "6", 672900, df2$essround)
+df2$essround <- ifelse(df2$essround == "8", 1792200, df2$essround)
+df2$essround <- ifelse(df2$essround == "9", 2315925, df2$essround)
+df2$essround <- factor(df2$essround)
+
+regmod1 <- lm(MR1 ~ essround + happy + stflife + stfeco + stfgov + ipeqopt + ipudrst + imptrad, df2)
+regmod2 <- lm(MR2 ~ essround + happy + stflife + stfeco  + stfgov + ipeqopt + ipudrst + imptrad, df2)
+
+regmod12 <- lm(MR1 ~ essround, df2)
+summary(regmod1)
+regmod12 <- lm(MR2 ~ essround, df2)
+summary(regmod1)
+
+```
+```{r}
+mod1 <- regmod1 <- lm(MR1 ~ tourists, df2)
+
+```
+
